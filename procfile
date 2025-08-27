@@ -1,1 +1,1 @@
-worker: python agent-mini.py
+web: python agent-mini.py

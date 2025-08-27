@@ -5,8 +5,8 @@ import psutil
 from datetime import datetime
 
 # 🔧 Konfigurasi (GANTI INI SESUAI HIVE-MU)
-HIVE_URL = "https://your-sentinel.up.railway.app/alert"  # GANTI!
-AGENT_ID = "agent-auto-01"                                # GANTI!
+HIVE_URL = "https://sentinel-core-production.up.railway.app/?key=watcher123/alert"  # GANTI!
+AGENT_ID = "agent-Ninja"                                # GANTI!
 SCAN_INTERVAL = 5
 
 def report(alert, level="info"):

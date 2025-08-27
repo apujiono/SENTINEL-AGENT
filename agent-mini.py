@@ -8,7 +8,7 @@ import threading
 
 app = Flask(__name__)
 
-HIVE_URL = "https://your-sentinel-hive.up.railway.app/alert"
+HIVE_URL = "https://sentinel-core-production.up.railway.app/alert"
 AGENT_ID = "flask-agent-railway"
 
 def background_task():

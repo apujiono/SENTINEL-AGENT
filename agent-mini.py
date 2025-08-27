@@ -1,42 +1,48 @@
-# agent-mini.py (versi Flask)
-from flask import Flask
+# agent-mini.py
 import time
 import requests
 import psutil
 from datetime import datetime
-import threading
+import os
 
-app = Flask(__name__)
+# 🔧 KONFIGURASI (GANTI SESUAI HIVE-MU)
+HIVE_URL = "https://https://sentinel-core-production.up.railway.app/?key=watcher123"  # GANTI INI
+DASH_KEY = "watcher123"  # HARUS SAMA DENGAN DI HIVE
+AGENT_ID = f"railway-agent-{os.getenv('RAILWAY_RELEASE_ID', 'local')}"
+SCAN_INTERVAL = 30  # Railway sleep, jadi jangan terlalu cepat
 
-HIVE_URL = "https://sentinel-core-production.up.railway.app/alert"
-AGENT_ID = "flask-agent-railway"
+def report(alert, level="info"):
+    try:
+        data = {
+            "node": AGENT_ID,
+            "alert": alert,
+            "cpu": psutil.cpu_percent(),
+            "ram": psutil.virtual_memory().percent,
+            "timestamp": datetime.now().isoformat()
+        }
+        # ✅ Kirim key di URL
+        response = requests.post(
+            f"{HIVE_URL}?key={DASH_KEY}",
+            json=data,
+            timeout=10
+        )
+        if response.status_code == 200:
+            print(f"🟢 Laporan dikirim: {alert}")
+        else:
+            print(f"❌ Gagal kirim: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"🔴 Error: {e}")
 
-def background_task():
+# 🔁 Loop utama
+if __name__ == "__main__":
+    print(f"🤖 Agent aktif: {AGENT_ID}")
     while True:
         try:
             cpu = psutil.cpu_percent()
             ram = psutil.virtual_memory().percent
-            data = {
-                "node": AGENT_ID,
-                "alert": f"📊 CPU={cpu}%, RAM={ram}%",
-                "cpu": cpu,
-                "ram": ram,
-                "timestamp": datetime.now().isoformat()
-            }
-            requests.post(HIVE_URL, json=data, timeout=5)
-            print(f"🟢 Laporan dikirim: CPU={cpu}%, RAM={ram}%")
-        except:
-            print("🔴 Gagal kirim laporan")
-        time.sleep(30)
-
-@app.route('/')
-def home():
-    return "🤖 Sentinel Agent Mini Aktif", 200
-
-# Jalankan background task
-thread = threading.Thread(target=background_task)
-thread.daemon = True
-thread.start()
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+            report(f"📊 CPU={cpu}%, RAM={ram}%")
+            if cpu > 80:
+                report(f"🔥 CPU Tinggi: {cpu}%", "warning")
+        except Exception as e:
+            print(f"⚠️ Error di loop: {e}")
+        time.sleep(SCAN_INTERVAL)
